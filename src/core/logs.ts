@@ -58,7 +58,7 @@ export class Logs {
     const filter = since ? `timestamp >= "${since.toISOString()}"` : '';
 
     try {
-      return fetchWithPages(async (pageSize, pageToken) => {
+      return await fetchWithPages(async (pageSize, pageToken) => {
         const res = await logger.entries.list({
           requestBody: {
             resourceNames: [`projects/${projectId}`],

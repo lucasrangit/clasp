@@ -148,6 +148,25 @@ describe('Log operations', function () {
       expect(logs.results.length).to.equal(1);
       expect(logs.results[0].logName).to.eql('projects/my-gcp-project/logs/stdout');
     });
+
+    it('should handle API errors and rethrow standardized error', async function () {
+      nock('https://logging.googleapis.com')
+        .post(/\/v2\/entries:list/)
+        .reply(429, {
+          error: {
+            code: 429,
+            message: 'Quota exceeded for quota metric Read requests',
+            status: 'RESOURCE_EXHAUSTED',
+          },
+        });
+
+      const clasp = await initClaspInstance({
+        credentials: mockCredentials(),
+      });
+      return expect(clasp.logs.getLogEntries()).to.eventually.be.rejectedWith(
+        'Quota exceeded for quota metric Read requests',
+      );
+    });
   });
   describe('with invalid project, authenticated', function () {
     beforeEach(function () {
