@@ -86,9 +86,43 @@ export const command = new Command('tail-logs')
 
     if (watch) {
       const POLL_INTERVAL = 6000; // 6s
-      setInterval(async () => {
-        await fetchAndPrintLogs();
-      }, POLL_INTERVAL);
+      let isWatching = true;
+      let timer: NodeJS.Timeout | undefined;
+
+      return new Promise<void>(resolve => {
+        const cleanup = () => {
+          isWatching = false;
+          if (timer) {
+            clearTimeout(timer);
+            timer = undefined;
+          }
+          process.removeListener('SIGINT', cleanup);
+          process.removeListener('SIGTERM', cleanup);
+          resolve();
+        };
+
+        process.once('SIGINT', cleanup);
+        process.once('SIGTERM', cleanup);
+
+        const poll = async () => {
+          if (!isWatching) {
+            return;
+          }
+          try {
+            await fetchAndPrintLogs();
+          } catch (error) {
+            if (isWatching) {
+              console.error(error instanceof Error ? error.message : String(error));
+            }
+          } finally {
+            if (isWatching) {
+              timer = setTimeout(poll, POLL_INTERVAL);
+            }
+          }
+        };
+
+        timer = setTimeout(poll, POLL_INTERVAL);
+      });
     }
   });
 

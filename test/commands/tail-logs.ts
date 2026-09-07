@@ -106,6 +106,19 @@ describe('Tail logs command', function () {
       const out = await runCommand(['logs']);
       expect(out.stdout).to.contain('INFO');
     });
+
+    it('should support watch mode and exit cleanly on SIGINT', async function () {
+      mockListLogEntries({
+        projectId: 'mock-gcp-project',
+      });
+      const cmdPromise = runCommand(['tail-logs', '--watch']);
+      await new Promise(resolve => setTimeout(resolve, 50));
+      process.emit('SIGINT');
+      const out = await cmdPromise;
+      expect(out.stdout).to.contain('INFO');
+      expect(out.stdout).to.contain('myFunction');
+      expect(out.stdout).to.contain('test log');
+    });
   });
   describe('Without project, authenticated', function () {
     beforeEach(function () {
