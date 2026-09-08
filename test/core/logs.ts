@@ -98,7 +98,7 @@ describe('Log operations', function () {
           expect(body.resourceNames).to.eql(['projects/mock-gcp-project']);
           expect(body.filter).to.equal('');
           expect(body.orderBy).to.equal('timestamp desc');
-          expect(body.pageSize).to.equal(100);
+          expect(body.pageSize).to.equal(50);
           return true;
         })
         .reply(200, {
@@ -127,7 +127,7 @@ describe('Log operations', function () {
           expect(body.resourceNames).to.eql(['projects/mock-gcp-project']);
           expect(body.filter).to.equal('timestamp >= "2023-10-26T10:00:00.000Z"');
           expect(body.orderBy).to.equal('timestamp desc');
-          expect(body.pageSize).to.equal(100);
+          expect(body.pageSize).to.equal(50);
           return true;
         })
         .reply(200, {
