@@ -58,21 +58,33 @@ export class Logs {
     const filter = since ? `timestamp >= "${since.toISOString()}"` : '';
 
     try {
-      return await fetchWithPages(async (pageSize, pageToken) => {
-        const res = await logger.entries.list({
-          requestBody: {
-            resourceNames: [`projects/${projectId}`],
-            filter,
-            orderBy: 'timestamp desc',
-            pageSize,
-            pageToken,
-          },
-        });
-        return {
-          results: res.data.entries || [],
-          nextPageToken: res.data.nextPageToken,
-        };
-      });
+      return await fetchWithPages(
+        async (pageSize, pageToken) => {
+          const res = await logger.entries.list(
+            {
+              requestBody: {
+                resourceNames: [`projects/${projectId}`],
+                filter,
+                orderBy: 'timestamp desc',
+                pageSize,
+                pageToken,
+              },
+            },
+            {
+              headers: {
+                'x-goog-user-project': projectId,
+              },
+            },
+          );
+          return {
+            results: res.data.entries || [],
+            nextPageToken: res.data.nextPageToken,
+          };
+        },
+        // Cloud Logging limit: 60 read req/min (https://cloud.google.com/logging/quotas#api-limits).
+        // If POLL_INTERVAL is 6s (10 polls/min) * up to 6 requests/poll = up to 60 req/min, matching the quota limit.
+        {pageSize: 50, maxPages: 6},
+      );
     } catch (error) {
       handleApiError(error);
     }
