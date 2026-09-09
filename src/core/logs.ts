@@ -60,15 +60,22 @@ export class Logs {
     try {
       return await fetchWithPages(
         async (pageSize, pageToken) => {
-          const res = await logger.entries.list({
-            requestBody: {
-              resourceNames: [`projects/${projectId}`],
-              filter,
-              orderBy: 'timestamp desc',
-              pageSize,
-              pageToken,
+          const res = await logger.entries.list(
+            {
+              requestBody: {
+                resourceNames: [`projects/${projectId}`],
+                filter,
+                orderBy: 'timestamp desc',
+                pageSize,
+                pageToken,
+              },
             },
-          });
+            {
+              headers: {
+                'x-goog-user-project': projectId,
+              },
+            },
+          );
           return {
             results: res.data.entries || [],
             nextPageToken: res.data.nextPageToken,
